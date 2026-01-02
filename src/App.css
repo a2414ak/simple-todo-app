@@ -36,6 +36,19 @@ h1 {
   background-color: #0056b3;
 }
 
+.input-container {
+  display: flex;
+  gap: 8px;
+  margin-bottom: 20px;
+}
+
+.input-container input[type="date"] {
+  padding: 8px;
+  border: 1px solid #ccc;
+  border-radius: 4px;
+  font-size: 14px;
+}
+
 .todo-list {
   list-style: none;
   padding: 0;
@@ -50,6 +63,16 @@ h1 {
   margin-bottom: 8px;
   background-color: #f8f9fa;
   border-radius: 4px;
+}
+
+.todo-item.overdue {
+  background-color: #ffe0e0;
+  border-left: 4px solid #d32f2f;
+}
+
+.todo-item.overdue .due-date {
+  color: #d32f2f;
+  font-weight: bold;
 }
 
 .todo-item span {
@@ -68,4 +91,16 @@ h1 {
 
 .todo-item button:hover {
   background-color: #c82333;
+}
+
+.todo-content {
+  display: flex;
+  flex-direction: column;
+  gap: 4px;
+  flex: 1;
+}
+
+.due-date {
+  font-size: 12px;
+  color: #666;
 }

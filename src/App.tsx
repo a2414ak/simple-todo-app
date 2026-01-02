@@ -1,48 +1,87 @@
 import { useState } from 'react';
-import { Todo } from './types';
 import './App.css';
+import { Todo } from './types';
 
 function App() {
   const [todos, setTodos] = useState<Todo[]>([]);
-  const [inputValue, setInputValue] = useState('');
+  const [input, setInput] = useState('');
+  const [dueDate, setDueDate] = useState('');
 
-  const handleAddTodo = () => {
-    if (inputValue.trim() === '') {
-      return;
-    }
-
-    const newTodo: Todo = {
-      id: Date.now().toString(),
-      title: inputValue,
-    };
-
-    setTodos([...todos, newTodo]);
-    setInputValue('');
+  const isOverdue = (due: string | undefined): boolean => {
+    if (!due) return false;
+    return new Date(due) < new Date(new Date().toDateString());
   };
 
-  const handleDeleteTodo = (id: string) => {
-    setTodos(todos.filter(todo => todo.id !== id));
+  const addTodo = () => {
+    if (input.trim() === '') return;
+    const newTodo: Todo = {
+      id: Date.now().toString(),
+      text: input,
+      completed: false,
+      dueDate: dueDate || undefined,
+    };
+    setTodos([...todos, newTodo]);
+    setInput('');
+    setDueDate('');
+  };
+
+  const toggleTodo = (id: string) => {
+    setTodos(
+      todos.map((todo) =>
+        todo.id === id ? { ...todo, completed: !todo.completed } : todo
+      )
+    );
+  };
+
+  const deleteTodo = (id: string) => {
+    setTodos(todos.filter((todo) => todo.id !== id));
+  };
+
+  const handleKeyPress = (e: React.KeyboardEvent) => {
+    if (e.key === 'Enter') {
+      addTodo();
+    }
   };
 
   return (
     <div className="app">
-      <h1>Todo App</h1>
-
-      <div className="input-section">
+      <h1>シンプル ToDo アプリ</h1>
+      <div className="input-container">
         <input
           type="text"
-          value={inputValue}
-          onChange={(e) => setInputValue(e.target.value)}
-          placeholder="新しいタスクを入力"
+          value={input}
+          onChange={(e) => setInput(e.target.value)}
+          onKeyPress={handleKeyPress}
+          placeholder="タスクを入力..."
         />
-        <button onClick={handleAddTodo}>追加</button>
+        <input
+          type="date"
+          value={dueDate}
+          onChange={(e) => setDueDate(e.target.value)}
+          placeholder="期限を選択..."
+        />
+        <button onClick={addTodo}>追加</button>
       </div>
-
       <ul className="todo-list">
         {todos.map((todo) => (
-          <li key={todo.id} className="todo-item">
-            <span>{todo.title}</span>
-            <button onClick={() => handleDeleteTodo(todo.id)}>削除</button>
+          <li
+            key={todo.id}
+            className={`todo-item ${todo.completed ? 'completed' : ''} ${
+              isOverdue(todo.dueDate) ? 'overdue' : ''
+            }`}
+          >
+            <input
+              type="checkbox"
+              checked={todo.completed}
+              onChange={() => toggleTodo(todo.id)}
+            />
+            <div className="todo-content">
+              <span>{todo.text}</span>
+              {todo.dueDate && (
+                <span className="due-date">期限: {todo.dueDate}</span>
+              )}
+            </div>
+            <button onClick={() => deleteTodo(todo.id)}>削除</button>
           </li>
         ))}
       </ul>
