@@ -7,6 +7,7 @@ function App() {
   const [input, setInput] = useState('');
   const [dueDate, setDueDate] = useState('');
   const [filterStatus, setFilterStatus] = useState<TodoStatus>('notStarted');
+  const [sortBy, setSortBy] = useState<'createdAt' | 'dueDate'>('createdAt');
 
   const isOverdue = (due: string | undefined): boolean => {
     if (!due) return false;
@@ -57,7 +58,22 @@ function App() {
     }
   };
 
-  const filteredTodos = todos.filter((todo) => todo.status === filterStatus);
+  const getSortedTodos = (todosToSort: Todo[]): Todo[] => {
+    const sorted = [...todosToSort];
+    if (sortBy === 'createdAt') {
+      return sorted; // 作成順（ID は Date.now()）
+    } else if (sortBy === 'dueDate') {
+      return sorted.sort((a, b) => {
+        if (!a.dueDate && !b.dueDate) return 0;
+        if (!a.dueDate) return 1;
+        if (!b.dueDate) return -1;
+        return new Date(a.dueDate).getTime() - new Date(b.dueDate).getTime();
+      });
+    }
+    return sorted;
+  };
+
+  const filteredTodos = getSortedTodos(todos.filter((todo) => todo.status === filterStatus));
 
   const statusLabels: Record<TodoStatus, string> = {
     notStarted: '未着手',
@@ -85,16 +101,26 @@ function App() {
         <button onClick={addTodo}>追加</button>
       </div>
 
-      <div className="status-tabs">
-        {(['notStarted', 'inProgress', 'completed'] as TodoStatus[]).map((status) => (
-          <button
-            key={status}
-            className={`status-tab ${filterStatus === status ? 'active' : ''}`}
-            onClick={() => setFilterStatus(status)}
-          >
-            {statusLabels[status]} ({todos.filter((t) => t.status === status).length})
-          </button>
-        ))}
+      <div className="status-tabs-container">
+        <div className="status-tabs">
+          {(['notStarted', 'inProgress', 'completed'] as TodoStatus[]).map((status) => (
+            <button
+              key={status}
+              className={`status-tab ${filterStatus === status ? 'active' : ''}`}
+              onClick={() => setFilterStatus(status)}
+            >
+              {statusLabels[status]} ({todos.filter((t) => t.status === status).length})
+            </button>
+          ))}
+        </div>
+        <select
+          value={sortBy}
+          onChange={(e) => setSortBy(e.target.value as 'createdAt' | 'dueDate')}
+          className="sort-select"
+        >
+          <option value="createdAt">作成日時</option>
+          <option value="dueDate">期限</option>
+        </select>
       </div>
 
       <ul className="todo-list">
