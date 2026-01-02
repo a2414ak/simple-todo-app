@@ -1,11 +1,12 @@
 import { useState } from 'react';
 import './App.css';
-import { Todo } from './types';
+import { Todo, TodoStatus } from './types';
 
 function App() {
   const [todos, setTodos] = useState<Todo[]>([]);
   const [input, setInput] = useState('');
   const [dueDate, setDueDate] = useState('');
+  const [filterStatus, setFilterStatus] = useState<TodoStatus>('notStarted');
 
   const isOverdue = (due: string | undefined): boolean => {
     if (!due) return false;
@@ -19,6 +20,7 @@ function App() {
       text: input,
       completed: false,
       dueDate: dueDate || undefined,
+      status: 'notStarted',
     };
     setTodos([...todos, newTodo]);
     setInput('');
@@ -28,7 +30,19 @@ function App() {
   const toggleTodo = (id: string) => {
     setTodos(
       todos.map((todo) =>
-        todo.id === id ? { ...todo, completed: !todo.completed } : todo
+        todo.id === id
+          ? { ...todo, completed: !todo.completed, status: !todo.completed ? 'completed' : 'notStarted' }
+          : todo
+      )
+    );
+  };
+
+  const updateTodoStatus = (id: string, newStatus: TodoStatus) => {
+    setTodos(
+      todos.map((todo) =>
+        todo.id === id
+          ? { ...todo, status: newStatus, completed: newStatus === 'completed' }
+          : todo
       )
     );
   };
@@ -41,6 +55,14 @@ function App() {
     if (e.key === 'Enter') {
       addTodo();
     }
+  };
+
+  const filteredTodos = todos.filter((todo) => todo.status === filterStatus);
+
+  const statusLabels: Record<TodoStatus, string> = {
+    notStarted: '未着手',
+    inProgress: '進行中',
+    completed: '完了',
   };
 
   return (
@@ -62,8 +84,21 @@ function App() {
         />
         <button onClick={addTodo}>追加</button>
       </div>
+
+      <div className="status-tabs">
+        {(['notStarted', 'inProgress', 'completed'] as TodoStatus[]).map((status) => (
+          <button
+            key={status}
+            className={`status-tab ${filterStatus === status ? 'active' : ''}`}
+            onClick={() => setFilterStatus(status)}
+          >
+            {statusLabels[status]} ({todos.filter((t) => t.status === status).length})
+          </button>
+        ))}
+      </div>
+
       <ul className="todo-list">
-        {todos.map((todo) => (
+        {filteredTodos.map((todo) => (
           <li
             key={todo.id}
             className={`todo-item ${todo.completed ? 'completed' : ''} ${
@@ -81,7 +116,18 @@ function App() {
                 <span className="due-date">期限: {todo.dueDate}</span>
               )}
             </div>
-            <button onClick={() => deleteTodo(todo.id)}>削除</button>
+            <div className="todo-actions">
+              <select
+                value={todo.status}
+                onChange={(e) => updateTodoStatus(todo.id, e.target.value as TodoStatus)}
+                className="status-select"
+              >
+                <option value="notStarted">未着手</option>
+                <option value="inProgress">進行中</option>
+                <option value="completed">完了</option>
+              </select>
+              <button onClick={() => deleteTodo(todo.id)}>削除</button>
+            </div>
           </li>
         ))}
       </ul>
